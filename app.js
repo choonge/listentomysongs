@@ -1,55 +1,54 @@
+import { LocationPin, locationPins } from './pins.js';
+
 // Map configuration and state
 let map;
 let markers = [];
 let activeFilters = new Set();
+let currentInfoWindow = null; // Track the currently open info window
 
-// Data structure for a pin
-class LocationPin {
-    constructor({
-        title,
-        youtubeLink,
-        rating,
-        lat,
-        lng,
-        tags
-    }) {
-        this.title = title;
-        this.category = category;
-        this.youtubeLink = youtubeLink;
-        this.rating = rating;
-        this.position = { lat, lng };
-        this.tags = tags;
+// Define continent coordinates and zoom levels
+const continentViews = {
+    world: {
+        center: { lat: 20, lng: 0 },
+        zoom: 2
+    },
+    asia: {
+        center: { lat: 34.0479, lng: 100.6197 }, // Centered on Asia
+        zoom: 4
+    },
+    us: {
+        center: { lat: 39.8283, lng: -98.5795 },
+        zoom: 4
+    },
+    europe: {
+        center: { lat: 54.5260, lng: 15.2551 },
+        zoom: 4
+    }
+};
+
+// Get the last selected region or default to world view
+function getInitialRegion() {
+    const savedRegion = localStorage.getItem('selectedRegion');
+    return savedRegion || 'world';
+}
+
+// Save the selected region
+function saveRegion(region) {
+    if (region) {
+        localStorage.setItem('selectedRegion', region);
+    } else {
+        localStorage.removeItem('selectedRegion');
     }
 }
 
-// Hardcoded list of location pins
-const locationPins = [
-    new LocationPin({
-        title: "First Song Location",
-        youtubeLink: "https://www.youtube.com/watch?v=BP9wwPW78UE",
-        rating: 4,
-        lat: 35.7102278,
-        lng: 139.7509408,
-        tags: ["hotel", "all you can eat", "breakfast", "buffet"]
-    }),
-    new LocationPin({
-        title: "Second Song Location",
-        youtubeLink: "https://www.youtube.com/watch?v=example2",
-        rating: 4,
-        lat: 40.7128,
-        lng: -74.0060,
-        tags: ["music", "dance"]
-    }),
-];
-
 // Initialize the map
 function initMap() {
-    // Center the map on a default location (can be adjusted)
-    const defaultCenter = { lat: 39.8283, lng: -98.5795 }; // Center of the US
+    const initialRegion = getInitialRegion();
+    const defaultView = continentViews[initialRegion];
     
     map = new google.maps.Map(document.getElementById('map'), {
-        zoom: 4,
-        center: defaultCenter,
+        zoom: defaultView.zoom,
+        center: defaultView.center,
         styles: [
             {
                 featureType: 'poi',
@@ -59,8 +58,19 @@ function initMap() {
         ]
     });
 
+    // Close info window when clicking on the map
+    map.addListener('click', () => {
+        if (currentInfoWindow) {
+            currentInfoWindow.close();
+            currentInfoWindow = null;
+        }
+    });
+
     // Initialize tag filters
     initializeTagFilters();
+    
+    // Initialize continent buttons
+    initializeContinentButtons(initialRegion);
     
     // Add all pins to the map
     refreshPins();
@@ -83,6 +93,42 @@ function initializeTagFilters() {
     });
 
     document.getElementById('clear-filters').addEventListener('click', clearFilters);
+}
+
+// Initialize continent buttons
+function initializeContinentButtons(initialRegion) {
+    const buttons = document.querySelectorAll('.continent-button');
+    let activeButton = null;
+
+    buttons.forEach(button => {
+        const region = button.dataset.region;
+        
+        // Set initial active state
+        if (region === initialRegion) {
+            button.classList.add('active');
+            activeButton = button;
+        }
+
+        button.addEventListener('click', () => {
+            // Remove active class from previous button
+            if (activeButton) {
+                activeButton.classList.remove('active');
+            }
+
+            // If clicking the same button that's already active, do nothing
+            if (activeButton === button) {
+                return;
+            }
+
+            // Set new view
+            const view = continentViews[region];
+            map.setZoom(view.zoom);
+            map.setCenter(view.center);
+            button.classList.add('active');
+            activeButton = button;
+            saveRegion(region);
+        });
+    });
 }
 
 // Toggle filter for a tag
@@ -108,6 +154,12 @@ function clearFilters() {
 
 // Refresh pins based on active filters
 function refreshPins() {
+    // Close any open info window
+    if (currentInfoWindow) {
+        currentInfoWindow.close();
+        currentInfoWindow = null;
+    }
+
     // Clear existing markers
     markers.forEach(marker => marker.setMap(null));
     markers = [];
@@ -131,7 +183,13 @@ function addPin(pin) {
     const infoWindow = createInfoWindow(pin);
 
     marker.addListener('click', () => {
+        // Close the currently open info window if there is one
+        if (currentInfoWindow) {
+            currentInfoWindow.close();
+        }
+        // Open the new info window and update the reference
         infoWindow.open(map, marker);
+        currentInfoWindow = infoWindow;
     });
 
     markers.push(marker);
