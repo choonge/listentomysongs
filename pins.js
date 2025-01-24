@@ -27,12 +27,12 @@ export const locationPins = [
         tags: ["hotel", "all you can eat", "breakfast", "buffet"]
     }),
     new LocationPin({
-        title: "Second Song Location",
-        youtubeLink: "https://www.youtube.com/watch?v=example2",
-        rating: 4,
-        lat: 40.7128,
-        lng: -74.0060,
-        tags: ["music", "dance"]
+        title: "Don Pollon",
+        youtubeLink: "https://www.youtube.com/watch?v=0iwUrxPrC2Q",
+        rating: 5,
+        lat: 34.02837,
+        lng: -118.1571796,
+        tags: ["food truck"]
     })
 ];
 

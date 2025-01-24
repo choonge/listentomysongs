@@ -13,7 +13,7 @@ const continentViews = {
         zoom: 2
     },
     asia: {
-        center: { lat: 34.0479, lng: 100.6197 }, // Centered on Asia
+        center: { lat: 23.5, lng: 121.5 }, // Centered on Taiwan
         zoom: 4
     },
     us: {
@@ -25,6 +25,27 @@ const continentViews = {
         zoom: 4
     }
 };
+
+// Mobile menu handling
+function initializeMobileMenu() {
+    const menuToggle = document.getElementById('menu-toggle');
+    const filterPanel = document.querySelector('.filter-panel');
+    
+    menuToggle.addEventListener('click', () => {
+        menuToggle.classList.toggle('active');
+        filterPanel.classList.toggle('active');
+    });
+
+    // Close menu when clicking outside of the menu and the toggle button
+    document.addEventListener('click', (e) => {
+        if (!filterPanel.contains(e.target) && 
+            !menuToggle.contains(e.target) && 
+            filterPanel.classList.contains('active')) {
+            menuToggle.classList.remove('active');
+            filterPanel.classList.remove('active');
+        }
+    });
+}
 
 // Get the last selected region or default to world view
 function getInitialRegion() {
@@ -71,6 +92,9 @@ function initMap() {
     
     // Initialize continent buttons
     initializeContinentButtons(initialRegion);
+    
+    // Initialize mobile menu
+    initializeMobileMenu();
     
     // Add all pins to the map
     refreshPins();

@@ -13,12 +13,14 @@ body {
     display: flex;
     flex-direction: column;
     height: 100vh;
+    position: relative;
 }
 
 header {
     background-color: #f8f9fa;
     padding: 1rem;
     box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    z-index: 1000;
 }
 
 .disclaimer {
@@ -46,12 +48,74 @@ header {
     position: relative;
 }
 
+.menu-toggle {
+    display: none;
+    position: fixed;
+    top: 10px;
+    right: 10px;
+    z-index: 2000; /* Higher than header */
+    background: #f8f9fa;
+    border: none;
+    padding: 12px;
+    cursor: pointer;
+    border-radius: 4px;
+}
+
+.hamburger {
+    display: block;
+    width: 24px;
+    height: 2px;
+    background: #333;
+    position: relative;
+    transition: all 0.3s ease;
+}
+
+.hamburger::before,
+.hamburger::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: #333;
+    transition: transform 0.3s ease;
+}
+
+.hamburger::before {
+    top: -8px;
+}
+
+.hamburger::after {
+    top: 8px;
+}
+
+.menu-toggle.active .hamburger {
+    background: transparent;
+}
+
+.menu-toggle.active .hamburger::before {
+    transform: translateY(8px) rotate(45deg);
+}
+
+.menu-toggle.active .hamburger::after {
+    transform: translateY(-8px) rotate(-45deg);
+}
+
+.menu-label {
+    display: none;
+}
+
 .filter-panel {
     width: 250px;
     background-color: #f8f9fa;
-    padding: 1rem;
-    overflow-y: auto;
     border-right: 1px solid #dee2e6;
+    z-index: 900;
+}
+
+.filter-content {
+    padding: 1rem;
+    height: 100%;
+    overflow-y: auto;
 }
 
 .filter-panel h3 {
@@ -153,12 +217,6 @@ main {
     color: #333;
 }
 
-.info-window .category {
-    color: #666;
-    font-size: 0.9rem;
-    margin-bottom: 8px;
-}
-
 .info-window .rating {
     color: #f8c51c;
     margin-bottom: 8px;
@@ -189,26 +247,31 @@ main {
 
 /* Mobile Responsiveness */
 @media (max-width: 768px) {
-    .content {
-        flex-direction: column;
-    }
-
-    .filter-panel {
-        width: 100%;
-        border-right: none;
-        border-bottom: 1px solid #dee2e6;
-        max-height: 150px;
+    .menu-toggle {
+        display: block;
     }
 
     header {
-        padding: 0.5rem;
+        padding-right: 50px;
     }
-    
-    .disclaimer, .spotify-link {
-        font-size: 0.8rem;
+
+    .filter-panel {
+        position: fixed;
+        right: -250px;
+        top: 0;
+        height: 100vh;
+        width: 250px;
+        background-color: #f8f9fa;
+        transition: transform 0.3s ease;
+        box-shadow: -2px 0 5px rgba(0,0,0,0.1);
+        z-index: 1500; /* Between header and menu button */
     }
-    
-    .info-window {
-        max-width: 250px;
+
+    .filter-panel.active {
+        transform: translateX(-250px);
+    }
+
+    main {
+        width: 100%;
     }
 }

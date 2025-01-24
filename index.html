@@ -8,6 +8,10 @@
 </head>
 <body>
     <div class="container">
+        <button id="menu-toggle" class="menu-toggle">
+            <span class="hamburger"></span>
+        </button>
+        
         <header>
             <div class="disclaimer">
                 ⚠️ This site is not affiliated with YouTuber Jimmy Kim. This is a fan-made project.
@@ -19,16 +23,18 @@
 
         <div class="content">
             <aside class="filter-panel">
-                <h3>Filter by Tags</h3>
-                <div id="tag-filters" class="tag-list"></div>
-                <button id="clear-filters" class="clear-button">Clear Filters</button>
-                
-                <h3>Zoom to Region</h3>
-                <div class="continent-buttons">
-                    <button class="continent-button" data-region="world">🌍 Planet Earth</button>
-                    <button class="continent-button" data-region="asia">🌏 Asia</button>
-                    <button class="continent-button" data-region="us">🌎 United States</button>
-                    <button class="continent-button" data-region="europe">🌍 Europe</button>
+                <div class="filter-content">
+                    <h3>Filter by Tags</h3>
+                    <div id="tag-filters" class="tag-list"></div>
+                    <button id="clear-filters" class="clear-button">Clear Filters</button>
+                    
+                    <h3>Zoom to Region</h3>
+                    <div class="continent-buttons">
+                        <button class="continent-button" data-region="world">🌍 Planet Earth</button>
+                        <button class="continent-button" data-region="asia">🌏 Asia</button>
+                        <button class="continent-button" data-region="us">🌎 United States</button>
+                        <button class="continent-button" data-region="europe">🌍 Europe</button>
+                    </div>
                 </div>
             </aside>
             <main>
