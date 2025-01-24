@@ -166,14 +166,14 @@ function initializeContinentButtons(initialRegion) {
         }
 
         button.addEventListener('click', () => {
-            // Remove active class from previous button
-            if (activeButton) {
-                activeButton.classList.remove('active');
-            }
-
             // If clicking the same button that's already active, do nothing
             if (activeButton === button) {
                 return;
+            }
+
+            // Remove active class from previous button
+            if (activeButton) {
+                activeButton.classList.remove('active');
             }
 
             // Set new view
@@ -184,7 +184,6 @@ function initializeContinentButtons(initialRegion) {
             activeButton = button;
             saveRegion(region);
             selectedContinent = region;
-            refreshPins();
         });
     });
 }
