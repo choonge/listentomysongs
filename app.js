@@ -91,6 +91,12 @@ async function initMap() {
     // Initialize mobile menu
     initializeMobileMenu();
     
+    // Initialize clear filters button
+    const clearFiltersButton = document.getElementById('clear-filters');
+    if (clearFiltersButton) {
+        clearFiltersButton.addEventListener('click', clearAllFilters);
+    }
+    
     // Add initial pins to the map
     await refreshPins();
 
@@ -101,6 +107,19 @@ async function initMap() {
             currentInfoWindow = null;
         }
     });
+}
+
+// Clear all filters and reset the map view
+function clearAllFilters() {
+    // Clear selected tags
+    selectedTags.clear();
+    
+    // Reset tag buttons UI
+    const tagButtons = document.querySelectorAll('.tag-button');
+    tagButtons.forEach(button => button.classList.remove('active'));
+   
+    // Refresh pins
+    refreshPins();
 }
 
 // Initialize tag filters
