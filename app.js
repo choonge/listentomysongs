@@ -146,7 +146,6 @@ function createInfoWindow(pin) {
     const content = `
         <div class="info-window">
             <h3>${pin.title}</h3>
-            <div class="category">${pin.category}</div>
             <div class="rating">Rating: ${'★'.repeat(pin.rating)}${'☆'.repeat(5-pin.rating)}</div>
             <div class="tags">${tagsHtml}</div>
             <a href="${pin.youtubeLink}" target="_blank" rel="noopener noreferrer" class="youtube-link">
