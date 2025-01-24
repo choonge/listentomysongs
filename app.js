@@ -275,6 +275,7 @@ function createInfoWindow(pin) {
 // Check if a pin is in a continent
 function isPinInContinent(pin, continent) {
     const continentBounds = {
+        world: { north: 90, south: -90, east: 180, west: -180 },
         asia: { north: 55, south: -10, east: 170, west: 60 },
         us: { north: 50, south: 20, east: -60, west: -125 },
         europe: { north: 70, south: 30, east: 60, west: -25 }
