@@ -1,25 +1,54 @@
 // Map configuration and state
 let map;
 let markers = [];
+let activeFilters = new Set();
 
-// Sample data structure for a pin
+// Data structure for a pin
 class LocationPin {
-    constructor(title, category, youtubeLink, rating, lat, lng) {
+    constructor({
+        title,
+        youtubeLink,
+        rating,
+        lat,
+        lng,
+        tags
+    }) {
         this.title = title;
         this.category = category;
         this.youtubeLink = youtubeLink;
         this.rating = rating;
         this.position = { lat, lng };
+        this.tags = tags;
     }
 }
+
+// Hardcoded list of location pins
+const locationPins = [
+    new LocationPin({
+        title: "First Song Location",
+        youtubeLink: "https://www.youtube.com/watch?v=BP9wwPW78UE",
+        rating: 4,
+        lat: 35.7102278,
+        lng: 139.7509408,
+        tags: ["hotel", "all you can eat", "breakfast", "buffet"]
+    }),
+    new LocationPin({
+        title: "Second Song Location",
+        youtubeLink: "https://www.youtube.com/watch?v=example2",
+        rating: 4,
+        lat: 40.7128,
+        lng: -74.0060,
+        tags: ["music", "dance"]
+    }),
+];
 
 // Initialize the map
 function initMap() {
     // Center the map on a default location (can be adjusted)
-    const defaultCenter = { lat: 0, lng: 0 };
+    const defaultCenter = { lat: 39.8283, lng: -98.5795 }; // Center of the US
     
     map = new google.maps.Map(document.getElementById('map'), {
-        zoom: 3,
+        zoom: 4,
         center: defaultCenter,
         styles: [
             {
@@ -30,45 +59,65 @@ function initMap() {
         ]
     });
 
-    // Add click listener for adding new pins
-    map.addListener('click', (event) => {
-        const position = {
-            lat: event.latLng.lat(),
-            lng: event.latLng.lng()
-        };
-        promptForPinInfo(position);
-    });
-
-    // Load saved pins (if any)
-    loadSavedPins();
+    // Initialize tag filters
+    initializeTagFilters();
+    
+    // Add all pins to the map
+    refreshPins();
 }
 
-// Prompt user for pin information
-function promptForPinInfo(position) {
-    // In a real application, you might want to use a modal or form
-    const title = prompt('Enter location title:');
-    if (!title) return;
+// Initialize tag filters
+function initializeTagFilters() {
+    const tagSet = new Set();
+    locationPins.forEach(pin => {
+        pin.tags.forEach(tag => tagSet.add(tag));
+    });
 
-    const category = prompt('Enter category:');
-    if (!category) return;
+    const tagFiltersContainer = document.getElementById('tag-filters');
+    Array.from(tagSet).sort().forEach(tag => {
+        const button = document.createElement('button');
+        button.className = 'tag-button';
+        button.textContent = tag;
+        button.addEventListener('click', () => toggleFilter(tag, button));
+        tagFiltersContainer.appendChild(button);
+    });
 
-    const youtubeLink = prompt('Enter YouTube link:');
-    if (!youtubeLink) return;
+    document.getElementById('clear-filters').addEventListener('click', clearFilters);
+}
 
-    const rating = prompt('Enter rating (1-5):');
-    if (!rating || isNaN(rating) || rating < 1 || rating > 5) return;
+// Toggle filter for a tag
+function toggleFilter(tag, button) {
+    if (activeFilters.has(tag)) {
+        activeFilters.delete(tag);
+        button.classList.remove('active');
+    } else {
+        activeFilters.add(tag);
+        button.classList.add('active');
+    }
+    refreshPins();
+}
 
-    const pin = new LocationPin(
-        title,
-        category,
-        youtubeLink,
-        parseFloat(rating),
-        position.lat,
-        position.lng
-    );
+// Clear all filters
+function clearFilters() {
+    activeFilters.clear();
+    document.querySelectorAll('.tag-button').forEach(button => {
+        button.classList.remove('active');
+    });
+    refreshPins();
+}
 
-    addPin(pin);
-    savePin(pin);
+// Refresh pins based on active filters
+function refreshPins() {
+    // Clear existing markers
+    markers.forEach(marker => marker.setMap(null));
+    markers = [];
+
+    // Add filtered pins
+    locationPins.forEach(pin => {
+        if (activeFilters.size === 0 || pin.tags.some(tag => activeFilters.has(tag))) {
+            addPin(pin);
+        }
+    });
 }
 
 // Add a pin to the map
@@ -90,11 +139,16 @@ function addPin(pin) {
 
 // Create info window content
 function createInfoWindow(pin) {
+    const tagsHtml = pin.tags
+        .map(tag => `<span class="tag">${tag}</span>`)
+        .join('');
+
     const content = `
         <div class="info-window">
             <h3>${pin.title}</h3>
             <div class="category">${pin.category}</div>
             <div class="rating">Rating: ${'★'.repeat(pin.rating)}${'☆'.repeat(5-pin.rating)}</div>
+            <div class="tags">${tagsHtml}</div>
             <a href="${pin.youtubeLink}" target="_blank" rel="noopener noreferrer" class="youtube-link">
                 Watch on YouTube
             </a>
@@ -104,19 +158,6 @@ function createInfoWindow(pin) {
     return new google.maps.InfoWindow({
         content: content
     });
-}
-
-// Save pin to localStorage
-function savePin(pin) {
-    const savedPins = JSON.parse(localStorage.getItem('pins') || '[]');
-    savedPins.push(pin);
-    localStorage.setItem('pins', JSON.stringify(savedPins));
-}
-
-// Load saved pins from localStorage
-function loadSavedPins() {
-    const savedPins = JSON.parse(localStorage.getItem('pins') || '[]');
-    savedPins.forEach(pin => addPin(pin));
 }
 
 // Initialize the map when the page loads
