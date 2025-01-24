@@ -1,5 +1,5 @@
 // Data structure for a pin
-class LocationPin {
+export class LocationPin {
     constructor({
         title,
         description,
@@ -18,44 +18,45 @@ class LocationPin {
     }
 }
 
-// Hardcoded list of location pins
-export const locationPins = [
-    new LocationPin({
-        title: "Dormy Inn Korakuen",
-        description: "Capsule hotel with all you can eat breakfast.",
-        youtubeLink: "https://www.youtube.com/watch?v=BP9wwPW78UE",
-        rating: 4,
-        lat: 35.7102278,
-        lng: 139.7509408,
-        tags: ["hotel", "all you can eat", "breakfast", "buffet"]
-    }),
-    new LocationPin({
-        title: "Don Pollon",
-        description: "Mexican food truck.",
-        youtubeLink: "https://www.youtube.com/watch?v=0iwUrxPrC2Q",
-        rating: 5,
-        lat: 34.02837,
-        lng: -118.1571796,
-        tags: ["food truck"]
-    }),
-    new LocationPin({
-        title: "Bun & Blanket",
-        description: "American Korean fusion burger truck.",
-        youtubeLink: "https://www.youtube.com/watch?v=0iwUrxPrC2Q",
-        rating: 4,
-        lat: 34.1300681,
-        lng: -118.2619128,
-        tags: ["food truck"]
-    }),
-    new LocationPin({
-        title: "Kogi BBQ",
-        description: "Mexican Korean food truck. They move around, see https://kogibbq.com/ for locations.",
-        youtubeLink: "https://www.youtube.com/watch?v=0iwUrxPrC2Q",
-        rating: 4,
-        lat: 34.0200392,
-        lng: -118.741362,
-        tags: ["food truck"]
-    }),
-];
+// Function to fetch and parse Google Sheets data
+async function fetchPinsFromSheet() {
+    const sheetId = '1euCzUeDrPyuUntuJiKjcMbFs1oPnYm1crItU35OGG0w';
+    const url = `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:json`;
+    
+    try {
+        const response = await fetch(url);
+        if (!response.ok) {
+            throw new Error('Failed to fetch sheet data');
+        }
+        
+        const text = await response.text();
+        // Parse the JSONP response
+        const jsonText = text.match(/google\.visualization\.Query\.setResponse\((.*)\);/)[1];
+        const data = JSON.parse(jsonText);
+        
+        // Transform rows into LocationPin objects
+        return data.table.rows.map(row => {
+            const values = row.c.map(cell => cell ? cell.v : null);
+            return new LocationPin({
+                title: values[0],
+                description: values[1],
+                youtubeLink: values[2],
+                rating: parseInt(values[3]),
+                lat: parseFloat(values[4]),
+                lng: parseFloat(values[5]),
+                tags: values[6] ? values[6].split(',').map(tag => tag.trim()) : []
+            });
+        });
+    } catch (error) {
+        console.error('Error fetching pins:', error);
+        // Return empty array if fetch fails
+        return [];
+    }
+}
 
-export { LocationPin };
+// Export the function to get pins
+export async function getLocationPins() {
+    const pins = await fetchPinsFromSheet();
+    // Return fetched pins or fallback to empty array if fetch fails
+    return pins;
+}

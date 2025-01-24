@@ -1,10 +1,12 @@
-import { LocationPin, locationPins } from './pins.js';
+import { LocationPin, getLocationPins } from './pins.js';
 
 // Map configuration and state
 let map;
 let markers = [];
 let activeFilters = new Set();
 let currentInfoWindow = null; // Track the currently open info window
+let selectedTags = new Set();
+let selectedContinent = null;
 
 // Define continent coordinates and zoom levels
 const continentViews = {
@@ -63,9 +65,9 @@ function saveRegion(region) {
 }
 
 // Initialize the map
-function initMap() {
+async function initMap() {
     const initialRegion = getInitialRegion();
-    const defaultView = continentViews[initialRegion];
+    const defaultView = continentViews[initialRegion] || { center: { lat: 20, lng: 0 }, zoom: 2 };
     
     map = new google.maps.Map(document.getElementById('map'), {
         zoom: defaultView.zoom,
@@ -79,16 +81,9 @@ function initMap() {
         ]
     });
 
-    // Close info window when clicking on the map
-    map.addListener('click', () => {
-        if (currentInfoWindow) {
-            currentInfoWindow.close();
-            currentInfoWindow = null;
-        }
-    });
-
-    // Initialize tag filters
-    initializeTagFilters();
+    // Initialize tag filters and add pins
+    const pins = await getLocationPins();
+    await initializeTagFilters(pins);
     
     // Initialize continent buttons
     initializeContinentButtons(initialRegion);
@@ -96,27 +91,45 @@ function initMap() {
     // Initialize mobile menu
     initializeMobileMenu();
     
-    // Add all pins to the map
-    refreshPins();
+    // Add initial pins to the map
+    await refreshPins();
+
+    // Close info window when clicking on the map
+    map.addListener('click', () => {
+        if (currentInfoWindow) {
+            currentInfoWindow.close();
+            currentInfoWindow = null;
+        }
+    });
 }
 
 // Initialize tag filters
-function initializeTagFilters() {
+async function initializeTagFilters(pins) {
     const tagSet = new Set();
-    locationPins.forEach(pin => {
+    pins.forEach(pin => {
         pin.tags.forEach(tag => tagSet.add(tag));
     });
 
     const tagFiltersContainer = document.getElementById('tag-filters');
+    tagFiltersContainer.innerHTML = '';
+
     Array.from(tagSet).sort().forEach(tag => {
         const button = document.createElement('button');
-        button.className = 'tag-button';
         button.textContent = tag;
-        button.addEventListener('click', () => toggleFilter(tag, button));
+        button.classList.add('tag-button');
+        
+        button.addEventListener('click', () => {
+            button.classList.toggle('active');
+            if (selectedTags.has(tag)) {
+                selectedTags.delete(tag);
+            } else {
+                selectedTags.add(tag);
+            }
+            refreshPins();
+        });
+        
         tagFiltersContainer.appendChild(button);
     });
-
-    document.getElementById('clear-filters').addEventListener('click', clearFilters);
 }
 
 // Initialize continent buttons
@@ -151,33 +164,14 @@ function initializeContinentButtons(initialRegion) {
             button.classList.add('active');
             activeButton = button;
             saveRegion(region);
+            selectedContinent = region;
+            refreshPins();
         });
     });
 }
 
-// Toggle filter for a tag
-function toggleFilter(tag, button) {
-    if (activeFilters.has(tag)) {
-        activeFilters.delete(tag);
-        button.classList.remove('active');
-    } else {
-        activeFilters.add(tag);
-        button.classList.add('active');
-    }
-    refreshPins();
-}
-
-// Clear all filters
-function clearFilters() {
-    activeFilters.clear();
-    document.querySelectorAll('.tag-button').forEach(button => {
-        button.classList.remove('active');
-    });
-    refreshPins();
-}
-
-// Refresh pins based on active filters
-function refreshPins() {
+// Refresh pins on the map based on filters
+async function refreshPins() {
     // Close any open info window
     if (currentInfoWindow) {
         currentInfoWindow.close();
@@ -188,10 +182,15 @@ function refreshPins() {
     markers.forEach(marker => marker.setMap(null));
     markers = [];
 
-    // Add filtered pins
-    locationPins.forEach(pin => {
-        if (activeFilters.size === 0 || pin.tags.some(tag => activeFilters.has(tag))) {
-            addPin(pin);
+    // Get fresh pins from the sheet
+    const pins = await getLocationPins();
+    
+    // Apply filters and create markers
+    pins.forEach(pin => {
+        if (selectedTags.size === 0 || pin.tags.some(tag => selectedTags.has(tag))) {
+            if (!selectedContinent || isPinInContinent(pin, selectedContinent)) {
+                addPin(pin);
+            }
         }
     });
 }
@@ -253,6 +252,21 @@ function createInfoWindow(pin) {
     return new google.maps.InfoWindow({
         content: content
     });
+}
+
+// Check if a pin is in a continent
+function isPinInContinent(pin, continent) {
+    const continentBounds = {
+        asia: { north: 55, south: -10, east: 170, west: 60 },
+        us: { north: 50, south: 20, east: -60, west: -125 },
+        europe: { north: 70, south: 30, east: 60, west: -25 }
+    };
+
+    const bounds = continentBounds[continent];
+    return pin.position.lat <= bounds.north &&
+           pin.position.lat >= bounds.south &&
+           pin.position.lng <= bounds.east &&
+           pin.position.lng >= bounds.west;
 }
 
 // Initialize the map when the page loads
