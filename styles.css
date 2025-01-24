@@ -207,6 +207,10 @@ main {
 }
 
 /* Info Window Styling */
+.gm-ui-hover-effect {
+    display: none !important;
+}
+
 .info-window {
     min-width: 250px;
     max-width: 350px;
@@ -225,7 +229,6 @@ main {
     color: #333;
     font-size: 1.1rem;
     text-align: left;
-    text-overflow: ellipsis;
 }
 
 .info-window-content {
@@ -237,7 +240,30 @@ main {
     margin-bottom: 12px;
     color: #666;
     font-size: 0.9rem;
-    line-height: 1.4;
+    line-height: 2;
+}
+
+.info-window-media {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 12px;
+}
+
+.info-window .youtube-link {
+    display: flex;
+    align-items: center;
+}
+
+.info-window .youtube-icon {
+    width: 32px;
+    height: 32px;
+    fill: #ff0000;
+    transition: opacity 0.2s;
+}
+
+.info-window .youtube-link:hover .youtube-icon {
+    opacity: 0.8;
 }
 
 .info-window .rating {
@@ -256,22 +282,6 @@ main {
 
 .info-window .star.filled {
     color: #ff9800;
-}
-
-.info-window .youtube-link {
-    display: inline-block;
-    margin-bottom: 12px;
-}
-
-.info-window .youtube-icon {
-    width: 32px;
-    height: 32px;
-    fill: #ff0000;
-    transition: opacity 0.2s;
-}
-
-.info-window .youtube-link:hover .youtube-icon {
-    opacity: 0.8;
 }
 
 .info-window .tags {

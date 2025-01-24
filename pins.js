@@ -21,7 +21,7 @@ class LocationPin {
 // Hardcoded list of location pins
 export const locationPins = [
     new LocationPin({
-        title: "Dormy Inn Korakuen Dormy Inn Korakuen Dormy Inn Korakuen",
+        title: "Dormy Inn Korakuen",
         description: "Capsule hotel with all you can eat breakfast.",
         youtubeLink: "https://www.youtube.com/watch?v=BP9wwPW78UE",
         rating: 4,
