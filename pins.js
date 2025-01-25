@@ -61,7 +61,13 @@ async function fetchPinsFromSheet() {
                     rating: parseInt(values[3]),
                     lat: parseFloat(values[4]),
                     lng: parseFloat(values[5]),
-                    tags: values[6] ? values[6].split(',').map(tag => tag.trim()) : []
+                    // Sort tags alphabetically and remove any empty tags
+                    tags: values[6] ? 
+                        values[6].split(',')
+                            .map(tag => tag.trim())
+                            .filter(tag => tag !== '')
+                            .sort((a, b) => a.localeCompare(b)) : 
+                        []
                 });
             });
     } catch (error) {
