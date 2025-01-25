@@ -58,18 +58,15 @@ async function initMap() {
 
     // Adjust map view if there are pins
     if (visiblePinsCount > 0) {
-        // If only one pin, zoom in a bit more
+        // If only one pin, zoom in closer
         if (visiblePinsCount === 1) {
-            map.setZoom(6);
-            map.setCenter(bounds.getCenter());
-        } else {
-            // Fit bounds with some padding
-            map.fitBounds(bounds, {
-                top: 50,    // Top padding
-                bottom: 50, // Bottom padding
-                left: 50,   // Left padding
-                right: 50   // Right padding
+            smoothMapTransition(map, {
+                center: bounds.getCenter(),
+                zoom: 10
             });
+        } else {
+            // Fit bounds with smooth transition
+            smoothMapTransition(map, { bounds });
         }
     }
 
@@ -169,23 +166,22 @@ async function refreshPins() {
 
     // Adjust map view if there are visible pins
     if (visiblePinsCount > 0) {
-        // If only one pin, zoom in a bit more
+        // If only one pin, zoom in closer
         if (visiblePinsCount === 1) {
-            map.setZoom(6);
-            map.setCenter(bounds.getCenter());
-        } else {
-            // Fit bounds with some padding
-            map.fitBounds(bounds, {
-                top: 50,    // Top padding
-                bottom: 50, // Bottom padding
-                left: 50,   // Left padding
-                right: 50   // Right padding
+            smoothMapTransition(map, {
+                center: bounds.getCenter(),
+                zoom: 10
             });
+        } else {
+            // Fit bounds with smooth transition
+            smoothMapTransition(map, { bounds });
         }
     } else {
         // Reset to world view if no pins match filters
-        map.setZoom(2);
-        map.setCenter({ lat: 20, lng: 0 });
+        smoothMapTransition(map, {
+            center: { lat: 20, lng: 0 },
+            zoom: 2
+        });
     }
 }
 
@@ -246,6 +242,78 @@ function createInfoWindow(pin) {
     return new google.maps.InfoWindow({
         content: content
     });
+}
+
+// Smoothly animate map view changes
+function smoothMapTransition(map, options) {
+    const { center, zoom, bounds } = options;
+
+    // Animate center if provided
+    if (center) {
+        map.panTo(center);
+    }
+
+    // Animate zoom if provided
+    if (zoom !== undefined) {
+        // Create a smooth zoom transition
+        const currentZoom = map.getZoom();
+        const zoomDiff = zoom - currentZoom;
+        const steps = Math.abs(zoomDiff);
+        const direction = zoomDiff > 0 ? 1 : -1;
+
+        let currentStep = 0;
+        const zoomInterval = setInterval(() => {
+            if (currentStep < steps) {
+                map.setZoom(currentZoom + (currentStep + 1) * direction);
+                currentStep++;
+            } else {
+                clearInterval(zoomInterval);
+            }
+        }, 100); // Adjust speed of zoom transition
+    }
+
+    // Fit bounds if provided
+    if (bounds) {
+        // First pan to the center of the bounds
+        map.panTo(bounds.getCenter());
+        
+        // Then smoothly zoom to fit bounds
+        const currentZoom = map.getZoom();
+        const targetBounds = new google.maps.LatLngBounds(bounds.getSouthWest(), bounds.getNorthEast());
+        targetBounds.extend(bounds.getSouthWest());
+        targetBounds.extend(bounds.getNorthEast());
+        
+        // Calculate target zoom level
+        const targetZoom = map.getZoom();
+        map.fitBounds(targetBounds, {
+            top: 50,
+            bottom: 50,
+            left: 50,
+            right: 50
+        });
+        const finalZoom = map.getZoom();
+        map.setZoom(currentZoom);
+        
+        // Smoothly transition to target zoom
+        let step = 0;
+        const steps = Math.abs(finalZoom - currentZoom);
+        const zoomInterval = setInterval(() => {
+            if (step < steps) {
+                const newZoom = currentZoom + ((finalZoom - currentZoom) * (step + 1)) / steps;
+                map.setZoom(newZoom);
+                step++;
+            } else {
+                clearInterval(zoomInterval);
+                // Final adjustment
+                map.fitBounds(bounds, {
+                    top: 50,
+                    bottom: 50,
+                    left: 50,
+                    right: 50
+                });
+            }
+        }, 100);
+    }
 }
 
 // Load pins when the DOM is fully loaded
