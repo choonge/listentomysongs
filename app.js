@@ -3,7 +3,6 @@ import { LocationPin, loadPins } from './pins.js';
 // Map configuration and state
 let map;
 let markers = [];
-let activeFilters = new Set();
 let currentInfoWindow = null; // Track the currently open info window
 let selectedTags = new Set();
 
@@ -72,10 +71,7 @@ async function initMap() {
 
     // Initialize tag filters and add pins
     await initializeTagFilters(pins);
-    
-    // Initialize mobile menu
-    initializeMobileMenu();
-    
+        
     // Initialize clear filters button
     const clearFiltersButton = document.getElementById('clear-filters');
     if (clearFiltersButton) {
