@@ -42,8 +42,38 @@ async function initMap() {
         ]
     });
 
-    // Initialize tag filters and add pins
+    // Load pins and set initial view
     const pins = await loadPins();
+    
+    // Prepare bounds for map fitting
+    const bounds = new google.maps.LatLngBounds();
+    let visiblePinsCount = 0;
+
+    // Add all pins and extend bounds
+    pins.forEach(pin => {
+        addPin(pin);
+        bounds.extend(new google.maps.LatLng(pin.position.lat, pin.position.lng));
+        visiblePinsCount++;
+    });
+
+    // Adjust map view if there are pins
+    if (visiblePinsCount > 0) {
+        // If only one pin, zoom in a bit more
+        if (visiblePinsCount === 1) {
+            map.setZoom(6);
+            map.setCenter(bounds.getCenter());
+        } else {
+            // Fit bounds with some padding
+            map.fitBounds(bounds, {
+                top: 50,    // Top padding
+                bottom: 50, // Bottom padding
+                left: 50,   // Left padding
+                right: 50   // Right padding
+            });
+        }
+    }
+
+    // Initialize tag filters and add pins
     await initializeTagFilters(pins);
     
     // Initialize mobile menu
@@ -55,9 +85,6 @@ async function initMap() {
         clearFiltersButton.addEventListener('click', clearAllFilters);
     }
     
-    // Add initial pins to the map
-    await refreshPins();
-
     // Close info window when clicking on the map
     map.addListener('click', () => {
         if (currentInfoWindow) {
@@ -69,14 +96,16 @@ async function initMap() {
 
 // Clear all filters and reset the map view
 function clearAllFilters() {
-    // Clear selected tags
+    // Clear tag filters
     selectedTags.clear();
     
-    // Reset tag buttons UI
-    const tagButtons = document.querySelectorAll('.tag-button');
-    tagButtons.forEach(button => button.classList.remove('active'));
-   
-    // Refresh pins
+    // Uncheck all tag filter checkboxes
+    const tagCheckboxes = document.querySelectorAll('#tag-filters input[type="checkbox"]');
+    tagCheckboxes.forEach(checkbox => {
+        checkbox.checked = false;
+    });
+    
+    // Refresh pins (this will reset the map view)
     refreshPins();
 }
 
@@ -114,22 +143,50 @@ async function refreshPins() {
     // Close any open info window
     if (currentInfoWindow) {
         currentInfoWindow.close();
-        currentInfoWindow = null;
     }
 
     // Clear existing markers
     markers.forEach(marker => marker.setMap(null));
     markers = [];
 
-    // Get fresh pins from the sheet
+    // Get all pins
     const pins = await loadPins();
-    
+
+    // Prepare bounds for map fitting
+    const bounds = new google.maps.LatLngBounds();
+    let visiblePinsCount = 0;
+
     // Apply filters and create markers
     pins.forEach(pin => {
         if (selectedTags.size === 0 || pin.tags.some(tag => selectedTags.has(tag))) {
             addPin(pin);
+            
+            // Extend bounds with pin location
+            bounds.extend(new google.maps.LatLng(pin.position.lat, pin.position.lng));
+            visiblePinsCount++;
         }
     });
+
+    // Adjust map view if there are visible pins
+    if (visiblePinsCount > 0) {
+        // If only one pin, zoom in a bit more
+        if (visiblePinsCount === 1) {
+            map.setZoom(6);
+            map.setCenter(bounds.getCenter());
+        } else {
+            // Fit bounds with some padding
+            map.fitBounds(bounds, {
+                top: 50,    // Top padding
+                bottom: 50, // Bottom padding
+                left: 50,   // Left padding
+                right: 50   // Right padding
+            });
+        }
+    } else {
+        // Reset to world view if no pins match filters
+        map.setZoom(2);
+        map.setCenter({ lat: 20, lng: 0 });
+    }
 }
 
 // Add a pin to the map
