@@ -33,7 +33,17 @@ async function initMap() {
     map = new google.maps.Map(document.getElementById('map'), {
         zoom: 2,
         center: { lat: 20, lng: 0 },
+        backgroundColor: '#aadaff', // Light blue color matching Google Maps ocean
         styles: [
+            {
+                "featureType": "water",
+                "elementType": "geometry",
+                "stylers": [
+                    {
+                        "color": "#aadaff"
+                    }
+                ]
+            },
             {
                 featureType: 'poi',
                 elementType: 'labels',
