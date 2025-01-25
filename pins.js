@@ -7,6 +7,7 @@ export class LocationPin {
         rating,
         lat,
         lng,
+        country,
         tags
     }) {
         this.title = title;
@@ -14,6 +15,7 @@ export class LocationPin {
         this.youtubeLink = youtubeLink;
         this.rating = rating;
         this.position = { lat, lng };
+        this.country = country;
         this.tags = tags;
     }
 }
@@ -36,7 +38,7 @@ async function fetchPinsFromSheet() {
         // Parse the JSONP response
         const jsonText = text.match(/google\.visualization\.Query\.setResponse\((.*)\);/)[1];
         const data = JSON.parse(jsonText);
-        
+
         // Transform rows into LocationPin objects
         return data.table.rows
             .filter(row => {
@@ -61,9 +63,10 @@ async function fetchPinsFromSheet() {
                     rating: parseInt(values[3]),
                     lat: parseFloat(values[4]),
                     lng: parseFloat(values[5]),
+                    country: values[6] ? values[6].trim() : '',
                     // Sort tags alphabetically and remove any empty tags
-                    tags: values[6] ? 
-                        values[6].split(',')
+                    tags: values[7] ? 
+                        values[7].split(',')
                             .map(tag => tag.trim())
                             .filter(tag => tag !== '')
                             .sort((a, b) => a.localeCompare(b)) : 
