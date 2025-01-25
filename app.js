@@ -6,27 +6,6 @@ let markers = [];
 let activeFilters = new Set();
 let currentInfoWindow = null; // Track the currently open info window
 let selectedTags = new Set();
-let selectedContinent = null;
-
-// Define continent coordinates and zoom levels
-const continentViews = {
-    world: {
-        center: { lat: 20, lng: 0 },
-        zoom: 2
-    },
-    asia: {
-        center: { lat: 23.5, lng: 121.5 }, // Centered on Taiwan
-        zoom: 4
-    },
-    us: {
-        center: { lat: 39.8283, lng: -98.5795 },
-        zoom: 4
-    },
-    europe: {
-        center: { lat: 54.5260, lng: 15.2551 },
-        zoom: 4
-    }
-};
 
 // Mobile menu handling
 function initializeMobileMenu() {
@@ -49,29 +28,11 @@ function initializeMobileMenu() {
     });
 }
 
-// Get the last selected region or default to world view
-function getInitialRegion() {
-    const savedRegion = localStorage.getItem('selectedRegion');
-    return savedRegion || 'world';
-}
-
-// Save the selected region
-function saveRegion(region) {
-    if (region) {
-        localStorage.setItem('selectedRegion', region);
-    } else {
-        localStorage.removeItem('selectedRegion');
-    }
-}
-
 // Initialize the map
 async function initMap() {
-    const initialRegion = getInitialRegion();
-    const defaultView = continentViews[initialRegion] || { center: { lat: 20, lng: 0 }, zoom: 2 };
-    
     map = new google.maps.Map(document.getElementById('map'), {
-        zoom: defaultView.zoom,
-        center: defaultView.center,
+        zoom: 2,
+        center: { lat: 20, lng: 0 },
         styles: [
             {
                 featureType: 'poi',
@@ -84,9 +45,6 @@ async function initMap() {
     // Initialize tag filters and add pins
     const pins = await loadPins();
     await initializeTagFilters(pins);
-    
-    // Initialize continent buttons
-    initializeContinentButtons(initialRegion);
     
     // Initialize mobile menu
     initializeMobileMenu();
@@ -151,43 +109,6 @@ async function initializeTagFilters(pins) {
     });
 }
 
-// Initialize continent buttons
-function initializeContinentButtons(initialRegion) {
-    const buttons = document.querySelectorAll('.continent-button');
-    let activeButton = null;
-
-    buttons.forEach(button => {
-        const region = button.dataset.region;
-        
-        // Set initial active state
-        if (region === initialRegion) {
-            button.classList.add('active');
-            activeButton = button;
-        }
-
-        button.addEventListener('click', () => {
-            // If clicking the same button that's already active, do nothing
-            if (activeButton === button) {
-                return;
-            }
-
-            // Remove active class from previous button
-            if (activeButton) {
-                activeButton.classList.remove('active');
-            }
-
-            // Set new view
-            const view = continentViews[region];
-            map.setZoom(view.zoom);
-            map.setCenter(view.center);
-            button.classList.add('active');
-            activeButton = button;
-            saveRegion(region);
-            selectedContinent = region;
-        });
-    });
-}
-
 // Refresh pins on the map based on filters
 async function refreshPins() {
     // Close any open info window
@@ -206,9 +127,7 @@ async function refreshPins() {
     // Apply filters and create markers
     pins.forEach(pin => {
         if (selectedTags.size === 0 || pin.tags.some(tag => selectedTags.has(tag))) {
-            if (!selectedContinent || isPinInContinent(pin, selectedContinent)) {
-                addPin(pin);
-            }
+            addPin(pin);
         }
     });
 }
@@ -272,28 +191,16 @@ function createInfoWindow(pin) {
     });
 }
 
-// Check if a pin is in a continent
-function isPinInContinent(pin, continent) {
-    const continentBounds = {
-        world: { north: 90, south: -90, east: 180, west: -180 },
-        asia: { north: 55, south: -10, east: 170, west: 60 },
-        us: { north: 50, south: 20, east: -60, west: -125 },
-        europe: { north: 70, south: 30, east: 60, west: -25 }
-    };
-
-    const bounds = continentBounds[continent];
-    return pin.position.lat <= bounds.north &&
-           pin.position.lat >= bounds.south &&
-           pin.position.lng <= bounds.east &&
-           pin.position.lng >= bounds.west;
-}
-
 // Load pins when the DOM is fully loaded
 document.addEventListener('DOMContentLoaded', async () => {
     const pins = await loadPins();
     // Initialize tag filters with loaded pins
-    initializeTagFilters(pins);
-    // Initialize map with loaded pins
+    await initializeTagFilters(pins);
+    
+    // Initialize mobile menu
+    initializeMobileMenu();
+    
+    // Refresh pins
     refreshPins();
 });
 
