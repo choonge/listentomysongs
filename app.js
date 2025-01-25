@@ -38,6 +38,10 @@ async function initializeTagFilters(pins) {
         if (pin.country) countrySet.add(pin.country);
     });
 
+    // Retrieve saved filters from local storage
+    const savedTags = JSON.parse(localStorage.getItem('selectedTags') || '[]');
+    const savedCountries = JSON.parse(localStorage.getItem('selectedCountries') || '[]');
+
     // Initialize tag filters
     const tagFiltersContainer = document.getElementById('tag-filters');
     tagFiltersContainer.innerHTML = '';
@@ -45,6 +49,13 @@ async function initializeTagFilters(pins) {
         const button = document.createElement('button');
         button.textContent = tag;
         button.classList.add('tag-button');
+        
+        // Check if this tag was previously selected
+        if (savedTags.includes(tag)) {
+            button.classList.add('active');
+            selectedTags.add(tag);
+        }
+        
         button.addEventListener('click', () => {
             button.classList.toggle('active');
             if (selectedTags.has(tag)) {
@@ -52,6 +63,8 @@ async function initializeTagFilters(pins) {
             } else {
                 selectedTags.add(tag);
             }
+            // Save selected tags to local storage
+            localStorage.setItem('selectedTags', JSON.stringify(Array.from(selectedTags)));
             refreshPins();
         });
         tagFiltersContainer.appendChild(button);
@@ -64,6 +77,13 @@ async function initializeTagFilters(pins) {
         const button = document.createElement('button');
         button.textContent = country;
         button.classList.add('tag-button');
+        
+        // Check if this country was previously selected
+        if (savedCountries.includes(country)) {
+            button.classList.add('active');
+            selectedCountries.add(country);
+        }
+        
         button.addEventListener('click', () => {
             button.classList.toggle('active');
             if (selectedCountries.has(country)) {
@@ -71,10 +91,15 @@ async function initializeTagFilters(pins) {
             } else {
                 selectedCountries.add(country);
             }
+            // Save selected countries to local storage
+            localStorage.setItem('selectedCountries', JSON.stringify(Array.from(selectedCountries)));
             refreshPins();
         });
         countryFiltersContainer.appendChild(button);
     });
+
+    // Refresh pins to apply saved filters
+    refreshPins();
 }
 
 // Clear tag filters
@@ -85,6 +110,9 @@ function clearTagFilters() {
     // Remove active class from all tag buttons
     const tagButtons = document.querySelectorAll('.filter-tag .tag-button.active');
     tagButtons.forEach(button => button.classList.remove('active'));
+    
+    // Clear saved tags in local storage
+    localStorage.removeItem('selectedTags');
     
     // Refresh pins (this will reset the map view)
     refreshPins();
@@ -98,6 +126,9 @@ function clearCountryFilters() {
     // Remove active class from all country buttons
     const countryButtons = document.querySelectorAll('.filter-country .tag-button.active');
     countryButtons.forEach(button => button.classList.remove('active'));
+    
+    // Clear saved countries in local storage
+    localStorage.removeItem('selectedCountries');
     
     // Refresh pins (this will reset the map view)
     refreshPins();
