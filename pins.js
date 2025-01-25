@@ -23,6 +23,18 @@ export class LocationPin {
 // Variable to store pins
 let cachedPins = null;
 
+// Strip HTML tags from input
+function stripHtmlTags(input) {
+    if (typeof input !== 'string') return '';
+    
+    return input
+        // Remove all HTML tags, including nested and self-closing tags
+        .replace(/<\/?[\w\s="/.':;#-\/?\[\]]+>/gi, '')
+        // Remove HTML entities
+        .replace(/&[#\w]+;/g, '')
+        .trim();
+}
+
 // Function to fetch and parse Google Sheets data
 async function fetchPinsFromSheet() {
     const sheetId = '1euCzUeDrPyuUntuJiKjcMbFs1oPnYm1crItU35OGG0w';
@@ -57,17 +69,17 @@ async function fetchPinsFromSheet() {
             .map(row => {
                 const values = row.c.map(cell => cell ? cell.v : null);
                 return new LocationPin({
-                    title: values[0],
-                    description: values[1],
-                    youtubeLink: values[2],
+                    title: stripHtmlTags(values[0]),
+                    description: stripHtmlTags(values[1]),
+                    youtubeLink: stripHtmlTags(values[2]),
                     rating: parseInt(values[3]),
                     lat: parseFloat(values[4]),
                     lng: parseFloat(values[5]),
-                    country: values[6] ? values[6].trim() : '',
+                    country: values[6] ? stripHtmlTags(values[6].trim()) : '',
                     // Sort tags alphabetically and remove any empty tags
                     tags: values[7] ? 
                         values[7].split(',')
-                            .map(tag => tag.trim())
+                            .map(tag => stripHtmlTags(tag.trim()))
                             .filter(tag => tag !== '')
                             .sort((a, b) => a.localeCompare(b)) : 
                         []
