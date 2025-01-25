@@ -63,7 +63,7 @@ async function initializeTagFilters(pins) {
     Array.from(countrySet).sort().forEach(country => {
         const button = document.createElement('button');
         button.textContent = country;
-        button.classList.add('country-button');
+        button.classList.add('tag-button');
         button.addEventListener('click', () => {
             button.classList.toggle('active');
             if (selectedCountries.has(country)) {
@@ -96,7 +96,7 @@ function clearCountryFilters() {
     selectedCountries.clear();
     
     // Remove active class from all country buttons
-    const countryButtons = document.querySelectorAll('.country-button.active');
+    const countryButtons = document.querySelectorAll('.tag-button.active');
     countryButtons.forEach(button => button.classList.remove('active'));
     
     // Refresh pins (this will reset the map view)
