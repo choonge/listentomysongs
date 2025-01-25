@@ -83,7 +83,7 @@ function clearTagFilters() {
     selectedTags.clear();
     
     // Remove active class from all tag buttons
-    const tagButtons = document.querySelectorAll('.tag-button.active');
+    const tagButtons = document.querySelectorAll('.filter-tag .tag-button.active');
     tagButtons.forEach(button => button.classList.remove('active'));
     
     // Refresh pins (this will reset the map view)
@@ -96,7 +96,7 @@ function clearCountryFilters() {
     selectedCountries.clear();
     
     // Remove active class from all country buttons
-    const countryButtons = document.querySelectorAll('.tag-button.active');
+    const countryButtons = document.querySelectorAll('.filter-country .tag-button.active');
     countryButtons.forEach(button => button.classList.remove('active'));
     
     // Refresh pins (this will reset the map view)
