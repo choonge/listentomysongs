@@ -59,9 +59,9 @@ async function initMap() {
     await initializeTagFilters(allPins);
         
     // Initialize clear filters button
-    const clearFiltersButton = document.getElementById('clear-filters');
-    if (clearFiltersButton) {
-        clearFiltersButton.addEventListener('click', clearAllFilters);
+    const clearTagFiltersButton = document.getElementById('clear-tag-filters');
+    if (clearTagFiltersButton) {
+        clearTagFiltersButton.addEventListener('click', clearTagFilters);
     }
 
     // Initial refresh to show all pins
@@ -77,7 +77,7 @@ async function initMap() {
 }
 
 // Clear all filters and reset the map view
-function clearAllFilters() {
+function clearTagFilters() {
     // Clear tag filters
     selectedTags.clear();
     
