@@ -71,11 +71,9 @@ function clearAllFilters() {
     // Clear tag filters
     selectedTags.clear();
     
-    // Uncheck all tag filter checkboxes
-    const tagCheckboxes = document.querySelectorAll('#tag-filters input[type="checkbox"]');
-    tagCheckboxes.forEach(checkbox => {
-        checkbox.checked = false;
-    });
+    // Remove active class from all tag buttons
+    const tagButtons = document.querySelectorAll('.tag-button.active');
+    tagButtons.forEach(button => button.classList.remove('active'));
     
     // Refresh pins (this will reset the map view)
     refreshPins();
