@@ -18,6 +18,9 @@ export class LocationPin {
     }
 }
 
+// Variable to store pins
+let cachedPins = null;
+
 // Function to fetch and parse Google Sheets data
 async function fetchPinsFromSheet() {
     const sheetId = '1euCzUeDrPyuUntuJiKjcMbFs1oPnYm1crItU35OGG0w';
@@ -54,9 +57,13 @@ async function fetchPinsFromSheet() {
     }
 }
 
-// Export the function to get pins
-export async function getLocationPins() {
-    const pins = await fetchPinsFromSheet();
-    // Return fetched pins or fallback to empty array if fetch fails
-    return pins;
+// Function to load pins only once
+async function loadPins() {
+    if (!cachedPins) {
+        cachedPins = await fetchPinsFromSheet();
+    }
+    return cachedPins;
 }
+
+// Export the function to get pins
+export { loadPins };

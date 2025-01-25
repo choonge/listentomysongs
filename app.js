@@ -1,4 +1,4 @@
-import { LocationPin, getLocationPins } from './pins.js';
+import { LocationPin, loadPins } from './pins.js';
 
 // Map configuration and state
 let map;
@@ -82,7 +82,7 @@ async function initMap() {
     });
 
     // Initialize tag filters and add pins
-    const pins = await getLocationPins();
+    const pins = await loadPins();
     await initializeTagFilters(pins);
     
     // Initialize continent buttons
@@ -201,7 +201,7 @@ async function refreshPins() {
     markers = [];
 
     // Get fresh pins from the sheet
-    const pins = await getLocationPins();
+    const pins = await loadPins();
     
     // Apply filters and create markers
     pins.forEach(pin => {
@@ -287,6 +287,15 @@ function isPinInContinent(pin, continent) {
            pin.position.lng <= bounds.east &&
            pin.position.lng >= bounds.west;
 }
+
+// Load pins when the DOM is fully loaded
+document.addEventListener('DOMContentLoaded', async () => {
+    const pins = await loadPins();
+    // Initialize tag filters with loaded pins
+    initializeTagFilters(pins);
+    // Initialize map with loaded pins
+    refreshPins();
+});
 
 // Initialize the map when the page loads
 window.addEventListener('load', initMap);
