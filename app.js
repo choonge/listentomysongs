@@ -5,6 +5,7 @@ let map;
 let markers = [];
 let currentInfoWindow = null; // Track the currently open info window
 let selectedTags = new Set();
+let allPins = []; // Store all pins after initial load
 
 // Mobile menu handling
 function initializeMobileMenu() {
@@ -41,42 +42,20 @@ async function initMap() {
         ]
     });
 
-    // Load pins and set initial view
-    const pins = await loadPins();
-    
-    // Prepare bounds for map fitting
-    const bounds = new google.maps.LatLngBounds();
-    let visiblePinsCount = 0;
-
-    // Add all pins and extend bounds
-    pins.forEach(pin => {
-        addPin(pin);
-        bounds.extend(new google.maps.LatLng(pin.position.lat, pin.position.lng));
-        visiblePinsCount++;
-    });
-
-    // Adjust map view if there are pins
-    if (visiblePinsCount > 0) {
-        // If only one pin, zoom in closer
-        if (visiblePinsCount === 1) {
-            smoothMapTransition(map, {
-                center: bounds.getCenter(),
-                zoom: 10
-            });
-        } else {
-            // Fit bounds with smooth transition
-            smoothMapTransition(map, { bounds });
-        }
-    }
+    // Load pins once
+    allPins = await loadPins();
 
     // Initialize tag filters and add pins
-    await initializeTagFilters(pins);
+    await initializeTagFilters(allPins);
         
     // Initialize clear filters button
     const clearFiltersButton = document.getElementById('clear-filters');
     if (clearFiltersButton) {
         clearFiltersButton.addEventListener('click', clearAllFilters);
     }
+
+    // Initial refresh to show all pins
+    refreshPins();
     
     // Close info window when clicking on the map
     map.addListener('click', () => {
@@ -142,15 +121,12 @@ async function refreshPins() {
     markers.forEach(marker => marker.setMap(null));
     markers = [];
 
-    // Get all pins
-    const pins = await loadPins();
-
     // Prepare bounds for map fitting
     const bounds = new google.maps.LatLngBounds();
     let visiblePinsCount = 0;
 
     // Apply filters and create markers
-    pins.forEach(pin => {
+    allPins.forEach(pin => {
         if (selectedTags.size === 0 || pin.tags.some(tag => selectedTags.has(tag))) {
             addPin(pin);
             
@@ -314,15 +290,8 @@ function smoothMapTransition(map, options) {
 
 // Load pins when the DOM is fully loaded
 document.addEventListener('DOMContentLoaded', async () => {
-    const pins = await loadPins();
-    // Initialize tag filters with loaded pins
-    await initializeTagFilters(pins);
-    
     // Initialize mobile menu
     initializeMobileMenu();
-    
-    // Refresh pins
-    refreshPins();
 });
 
 // Initialize the map when the page loads

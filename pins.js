@@ -38,7 +38,7 @@ async function fetchPinsFromSheet() {
         // Parse the JSONP response
         const jsonText = text.match(/google\.visualization\.Query\.setResponse\((.*)\);/)[1];
         const data = JSON.parse(jsonText);
-
+console.log('erer')
         // Transform rows into LocationPin objects
         return data.table.rows
             .filter(row => {
