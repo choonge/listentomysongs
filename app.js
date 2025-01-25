@@ -5,6 +5,7 @@ let map;
 let markers = [];
 let currentInfoWindow = null; // Track the currently open info window
 let selectedTags = new Set();
+let selectedCountries = new Set();
 let allPins = []; // Store all pins after initial load
 
 // Mobile menu handling
@@ -26,6 +27,80 @@ function initializeMobileMenu() {
             filterPanel.classList.remove('active');
         }
     });
+}
+
+// Initialize tag and country filters
+async function initializeTagFilters(pins) {
+    const tagSet = new Set();
+    const countrySet = new Set();
+    pins.forEach(pin => {
+        pin.tags.forEach(tag => tagSet.add(tag));
+        if (pin.country) countrySet.add(pin.country);
+    });
+
+    // Initialize tag filters
+    const tagFiltersContainer = document.getElementById('tag-filters');
+    tagFiltersContainer.innerHTML = '';
+    Array.from(tagSet).sort().forEach(tag => {
+        const button = document.createElement('button');
+        button.textContent = tag;
+        button.classList.add('tag-button');
+        button.addEventListener('click', () => {
+            button.classList.toggle('active');
+            if (selectedTags.has(tag)) {
+                selectedTags.delete(tag);
+            } else {
+                selectedTags.add(tag);
+            }
+            refreshPins();
+        });
+        tagFiltersContainer.appendChild(button);
+    });
+
+    // Initialize country filters
+    const countryFiltersContainer = document.getElementById('country-filters');
+    countryFiltersContainer.innerHTML = '';
+    Array.from(countrySet).sort().forEach(country => {
+        const button = document.createElement('button');
+        button.textContent = country;
+        button.classList.add('country-button');
+        button.addEventListener('click', () => {
+            button.classList.toggle('active');
+            if (selectedCountries.has(country)) {
+                selectedCountries.delete(country);
+            } else {
+                selectedCountries.add(country);
+            }
+            refreshPins();
+        });
+        countryFiltersContainer.appendChild(button);
+    });
+}
+
+// Clear tag filters
+function clearTagFilters() {
+    // Clear tag filters
+    selectedTags.clear();
+    
+    // Remove active class from all tag buttons
+    const tagButtons = document.querySelectorAll('.tag-button.active');
+    tagButtons.forEach(button => button.classList.remove('active'));
+    
+    // Refresh pins (this will reset the map view)
+    refreshPins();
+}
+
+// Clear country filters
+function clearCountryFilters() {
+    // Clear country filters
+    selectedCountries.clear();
+    
+    // Remove active class from all country buttons
+    const countryButtons = document.querySelectorAll('.country-button.active');
+    countryButtons.forEach(button => button.classList.remove('active'));
+    
+    // Refresh pins (this will reset the map view)
+    refreshPins();
 }
 
 // Initialize the map
@@ -58,10 +133,15 @@ async function initMap() {
     // Initialize tag filters and add pins
     await initializeTagFilters(allPins);
         
-    // Initialize clear filters button
+    // Initialize clear filters buttons
     const clearTagFiltersButton = document.getElementById('clear-tag-filters');
     if (clearTagFiltersButton) {
         clearTagFiltersButton.addEventListener('click', clearTagFilters);
+    }
+
+    const clearCountryFiltersButton = document.getElementById('clear-country-filters');
+    if (clearCountryFiltersButton) {
+        clearCountryFiltersButton.addEventListener('click', clearCountryFilters);
     }
 
     // Initial refresh to show all pins
@@ -71,50 +151,7 @@ async function initMap() {
     map.addListener('click', () => {
         if (currentInfoWindow) {
             currentInfoWindow.close();
-            currentInfoWindow = null;
         }
-    });
-}
-
-// Clear all filters and reset the map view
-function clearTagFilters() {
-    // Clear tag filters
-    selectedTags.clear();
-    
-    // Remove active class from all tag buttons
-    const tagButtons = document.querySelectorAll('.tag-button.active');
-    tagButtons.forEach(button => button.classList.remove('active'));
-    
-    // Refresh pins (this will reset the map view)
-    refreshPins();
-}
-
-// Initialize tag filters
-async function initializeTagFilters(pins) {
-    const tagSet = new Set();
-    pins.forEach(pin => {
-        pin.tags.forEach(tag => tagSet.add(tag));
-    });
-
-    const tagFiltersContainer = document.getElementById('tag-filters');
-    tagFiltersContainer.innerHTML = '';
-
-    Array.from(tagSet).sort().forEach(tag => {
-        const button = document.createElement('button');
-        button.textContent = tag;
-        button.classList.add('tag-button');
-        
-        button.addEventListener('click', () => {
-            button.classList.toggle('active');
-            if (selectedTags.has(tag)) {
-                selectedTags.delete(tag);
-            } else {
-                selectedTags.add(tag);
-            }
-            refreshPins();
-        });
-        
-        tagFiltersContainer.appendChild(button);
     });
 }
 
@@ -135,10 +172,11 @@ async function refreshPins() {
 
     // Apply filters and create markers
     allPins.forEach(pin => {
-        if (selectedTags.size === 0 || pin.tags.some(tag => selectedTags.has(tag))) {
+        const tagMatch = selectedTags.size === 0 || pin.tags.some(tag => selectedTags.has(tag));
+        const countryMatch = selectedCountries.size === 0 || selectedCountries.has(pin.country);
+
+        if (tagMatch && countryMatch) {
             addPin(pin);
-            
-            // Extend bounds with pin location
             bounds.extend(new google.maps.LatLng(pin.position.lat, pin.position.lng));
             visiblePinsCount++;
         }
